@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>McDonald's product comparison</title>
+    <!-- google font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sedan+SC&display=swap" rel="stylesheet">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
+    <!-- css -->
+    <link href="styles/style.css" rel="stylesheet" type="text/css" />
+    <!-- icon -->
+    <link rel="shortcut icon" href="images/favicon-16x16.png"/>
+    <!-- font awesome -->
+    <script src="https://kit.fontawesome.com/ec6483e80c.js" crossorigin="anonymous"></script>
+</head>
+<body>
+<div class="html_">
+    <div class="wrap_">
+        <h1 class="h1_"> McDonald's product comparison</h1>
+        <div class="search_">
+            <input class="search-bar_" id="placehold" placeholder="請輸入商品名稱：大麥克" />
+            <button class="search-but_" id="btn"><i class="fa-solid fa-magnifying-glass fa-1x"></i></button>
+            <div class="cal-icon">
+                <i class="fa-solid fa-calculator fa-3x" id="cal-icon"></i>
+                <span>0</span>
+            </div>
+        </div>
+        <div class="list"><ul id="ul"></ul></div>
+    </div>
+
+    <div class="container_">
+        <img src="" id="imge" />
+        <!-- <img src="images/bigmac.jfif" id="imge" /> -->
+        <i class="fa-solid fa-plus fa-3x" id="add-to-cal"></i>
+
+        <table id="product_list" class="table table-striped">
+            <thead>
+                <tr>
+                    <th>品名</th>
+                    <th>國家</th>
+                    <th>價格 (以匯率計算後)</th>
+                </tr>
+            </thead>
+            <tbody>
+            <?php
+            // Enable error reporting
+            error_reporting(E_ALL);
+            ini_set('display_errors', 1);
+
+            // Database connection details
+            $servername = "localhost";
+            $username = "root";
+            $password = "abcd1234";
+            $dbname = "softwaretesting";
+
+            // Create connection
+            $conn = new mysqli($servername, $username, $password, $dbname);
+
+            // Check connection
+            if ($conn->connect_error) {
+                die("Connection failed: " . $conn->connect_error);
+            }
+
+            // Fetch exchange rates
+            $exchange_rates = ["TWD" => 1]; // Default rate for TWD
+            $sql_exchange = "SELECT * FROM `exchange`";
+            $result_exchange = $conn->query($sql_exchange);
+
+            if ($result_exchange->num_rows > 0) {
+                while ($row_exchange = $result_exchange->fetch_assoc()) {
+                    $exchange_rates[$row_exchange["nation"]] = $row_exchange["rate"];
+                }
+            }
+
+            // Fetch product information
+            $sql_product = "SELECT * FROM `product`";
+            $result_product = $conn->query($sql_product);
+
+            if ($result_product->num_rows > 0) {
+                // Output data of each row
+                while ($row_product = $result_product->fetch_assoc()) {
+                    $nation = $row_product["nation"];
+                    $price = $row_product["price"];
+                    $rate = isset($exchange_rates[$nation]) ? $exchange_rates[$nation] : 1; // Default to 1 if no rate found
+                    $adjusted_price = $price * $rate;
+
+                    echo "<tr>";
+                    echo "<td>" . htmlspecialchars($row_product["name"]) . "</td>";
+                    echo "<td>" . htmlspecialchars($nation) . "</td>";
+                    echo "<td>" . htmlspecialchars($adjusted_price) . "</td>";
+                    echo "</tr>";
+                }
+            } else {
+                echo "<tr><td colspan='3'>No products found</td></tr>";
+            }
+
+            $conn->close();
+            ?>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-close" id="sidebar-close">
+            <i class="fa-solid fa-close"></i>
+        </div>
+        <div class="cart-menu">
+            <h3>My Calculator</h3>
+            <div class="dropdown">
+                <button class="dropdown-btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">TWD</button>
+                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                    <li><a class="dropdown-item" href="#">TWD</a></li>
+                    <li><a class="dropdown-item" href="#">USD</a></li>
+                    <li><a class="dropdown-item" href="#">JPY</a></li>
+                    <li><a class="dropdown-item" href="#">VND</a></li>
+                </ul>
+            </div>
+
+            <div class="cart-items"></div>
+        </div>
+
+        <div class="sidebar--footer">
+            <div class="total--amount">
+                <h5>Total</h5>
+                <div class="cart-total">$0</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var table = document.getElementById('product_list');
+    var rows = table.getElementsByTagName('tr');
+    var th = table.getElementsByTagName('th');
+    var add_to_cal = document.getElementById('add-to-cal');
+    for (var i = 1; i < rows.length; i++) {
+        rows[i].style.display = 'none';
+    }
+    for (var i = 0; i < th.length; i++) {
+        th[i].style.display = 'none';
+    }
+    add_to_cal.style.display = 'none';
+</script>
+
+<script src="scripts/main.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-/bQdsTh/da6pkI1MST/rWKFNjaCP5gBSY4sEBT38Q/9RBh9AH40zEOg7Hlq2THRZ" crossorigin="anonymous"></script>
+</body>
+</html>
